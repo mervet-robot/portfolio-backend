@@ -1,9 +1,13 @@
 package yool.ma.portfolioservice.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import yool.ma.portfolioservice.dto.ProfileUpdateRequest;
 import yool.ma.portfolioservice.model.Profile;
@@ -14,6 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Map;
 import java.util.UUID;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -72,4 +77,47 @@ public class ProfileController {
             throw new RuntimeException("Failed to upload profile picture", e);
         }
     }
+
+    @PostMapping("/bio-check")
+    public ResponseEntity<String> verifyAndCorrectBio(@RequestBody Map<String, String> request) {
+        String bio = request.get("bio");
+
+        String prompt = "Correct the grammar and spelling of the following biography. Return only the corrected version, without adding new content or changing the meaning. The corrected bio must be between 20 and 50 words.\n\nBiography: " + bio;
+
+
+
+//        String prompt = "Correct the grammar and spelling of my biography in 20 to 50 words): \"" + bio;
+//                + "\". Return only the corrected version of the same bio. Maintain the word count between 20-50 words. "
+//                + "Do not change the meaning or add any new content. If the text makes no sense, respond with: INVALID BIO.";
+
+//        String prompt = "Correct the grammar and spelling of this biography: \"" + bio ;
+//                + "\". Return only the corrected version of the same bio. Do not change the meaning or add any new content. If the text makes no sense, respond with: INVALID BIO.";
+
+        RestTemplate restTemplate = new RestTemplate();
+        String url = "http://localhost:11434/api/generate";
+
+        Map<String, Object> body = Map.of(
+                "model", "tinyllama",
+                "prompt", prompt,
+                "stream", false
+        );
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
+        ResponseEntity<Map> response = restTemplate.postForEntity(url, entity, Map.class);
+
+        String responseText = ((String) response.getBody().get("response")).trim();
+        if (responseText.startsWith("\"") && responseText.endsWith("\"")) {
+            responseText = responseText.substring(1, responseText.length() - 1);
+        }
+        return ResponseEntity.ok(responseText);
+
+
+//        return ResponseEntity.ok((String) response.getBody().get("response"));
     }
+
+
+
+}

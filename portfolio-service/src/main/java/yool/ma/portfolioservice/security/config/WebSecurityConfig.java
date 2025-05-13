@@ -64,6 +64,9 @@ public class WebSecurityConfig {
                                 .requestMatchers("/api/test/all").permitAll()
                                 .requestMatchers("/h2-console/**").permitAll()
                                 .requestMatchers("/api/profiles/**").permitAll()
+                                .requestMatchers("/api/profiles/bio-check").permitAll()
+
+
                                 .requestMatchers("/api/certifications/**").permitAll()
                                 .requestMatchers("/api/certifications/profile/**").permitAll()
                                 .requestMatchers("/api/projects/**").permitAll()

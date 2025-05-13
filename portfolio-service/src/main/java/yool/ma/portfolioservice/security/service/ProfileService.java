@@ -13,11 +13,15 @@ import java.util.HashSet;
 @Service
 public class ProfileService {
 
+
+
     @Autowired
     private UserRepository userRepository;
 
     @Autowired
     private ProfileRepository profileRepository;
+
+
 
     public Profile getProfile(Long userId) {
         User user = userRepository.findById(userId)
@@ -77,4 +81,5 @@ public class ProfileService {
         profile.setProfilePicture(picturePath);
         return profileRepository.save(profile);
     }
+
 }
