@@ -59,7 +59,7 @@ public class AuthService {
     }
 
     public ResponseEntity<?> registerUser(RegisterRequest registerRequest) {
-        // Vérifier si l'utilisateur existe déjà avec le même username ET email
+        // First check if user exists with same username OR email (not AND)
         Optional<User> existingUser = userRepository.findByUsernameAndEmail(
                 registerRequest.getUsername(),
                 registerRequest.getEmail()
@@ -68,22 +68,36 @@ public class AuthService {
         if (existingUser.isPresent()) {
             User user = existingUser.get();
 
-            // Si déjà LAUREAT
-            if (user.getRole() == Role.LAUREAT) {
+            // Verify if the provided credentials match the existing user
+            if (!user.getEmail().equals(registerRequest.getEmail())) {
+                return ResponseEntity
+                        .badRequest()
+                        .body(new MessageResponse("Error: Username or email already in use"));
+            }
+
+            // Progressive role assignment logic
+            if (user.getRole() == Role.USER) {
+                // Upgrade USER to APPRENANT
+                user.setPassword(encoder.encode(registerRequest.getPassword()));
+                user.setRole(Role.APPRENANT);
+                userRepository.save(user);
+                return ResponseEntity.ok(new MessageResponse("USER upgraded to APPRENANT successfully!"));
+            }
+            else if (user.getRole() == Role.APPRENANT) {
+                // Upgrade APPRENANT to LAUREAT
+                user.setPassword(encoder.encode(registerRequest.getPassword()));
+                user.setRole(Role.LAUREAT);
+                userRepository.save(user);
+                return ResponseEntity.ok(new MessageResponse("APPRENANT upgraded to LAUREAT successfully!"));
+            }
+            else if (user.getRole() == Role.LAUREAT) {
                 return ResponseEntity
                         .badRequest()
                         .body(new MessageResponse("Error: Already registered as LAUREAT"));
             }
-
-            // Mise à jour vers LAUREAT
-            user.setPassword(encoder.encode(registerRequest.getPassword()));
-            user.setRole(Role.LAUREAT);
-            userRepository.save(user);
-
-            return ResponseEntity.ok(new MessageResponse("User upgraded to LAUREAT successfully!"));
         }
 
-        // Vérifications standard pour nouveau compte
+        // Standard checks for new registration
         if (userRepository.existsByUsername(registerRequest.getUsername())) {
             return ResponseEntity
                     .badRequest()
@@ -96,12 +110,12 @@ public class AuthService {
                     .body(new MessageResponse("Error: Email is already in use"));
         }
 
-        // Nouvel utilisateur - APPRENANT par défaut
+        // New user registration - USER by default
         User user = new User();
         user.setUsername(registerRequest.getUsername());
         user.setEmail(registerRequest.getEmail());
         user.setPassword(encoder.encode(registerRequest.getPassword()));
-        user.setRole(Role.APPRENANT);
+        user.setRole(Role.USER); // Changed from APPRENANT to USER
 
         Profile profile = new Profile();
         profile.setFirstName(registerRequest.getFirstName());
@@ -111,7 +125,7 @@ public class AuthService {
         user.setProfile(profile);
 
         userRepository.save(user);
-        return ResponseEntity.ok(new MessageResponse("User registered successfully as APPRENANT!"));
+        return ResponseEntity.ok(new MessageResponse("User registered successfully as USER!"));
     }
 
 

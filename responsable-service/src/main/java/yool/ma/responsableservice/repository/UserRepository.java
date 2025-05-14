@@ -1,8 +1,8 @@
-package yool.ma.portfolioservice.repository;
+package yool.ma.responsableservice.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import yool.ma.portfolioservice.model.User;
+import yool.ma.responsableservice.model.User;
 
 import java.util.Optional;
 
@@ -15,5 +15,4 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByUsernameAndEmail(String username, String email);
 
-    Optional<User> findByUsernameOrEmail(String username, String email);
 }
