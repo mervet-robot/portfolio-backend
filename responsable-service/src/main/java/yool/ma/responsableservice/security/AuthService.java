@@ -15,6 +15,7 @@ import yool.ma.responsableservice.dto.auth.JwtResponse;
 import yool.ma.responsableservice.dto.auth.LoginRequest;
 import yool.ma.responsableservice.dto.auth.RegisterRequest;
 import yool.ma.responsableservice.ennum.Role;
+import yool.ma.responsableservice.model.Profile;
 import yool.ma.responsableservice.model.User;
 import yool.ma.responsableservice.repository.UserRepository;
 import yool.ma.responsableservice.security.jwt.JwtUtils;
@@ -51,9 +52,9 @@ public class AuthService {
                 user.getId(),
                 user.getUsername(),
                 user.getEmail(),
-                user.getRole().name()
-//                user.getProfile().getFirstName(),
-//                user.getProfile().getLastName()
+                user.getRole().name(),
+                user.getProfile().getFirstName(),
+                user.getProfile().getLastName()
 
         );
     }
@@ -154,6 +155,13 @@ public ResponseEntity<?> registerUser(RegisterRequest registerRequest) {
     user.setEmail(registerRequest.getEmail());
     user.setPassword(encoder.encode(registerRequest.getPassword()));
     user.setRole(requestedRole);
+
+            Profile profile = new Profile();
+            profile.setFirstName(registerRequest.getFirstName());
+            profile.setLastName(registerRequest.getLastName());
+            profile.setEmail(registerRequest.getEmail());
+            profile.setUser(user);
+            user.setProfile(profile);
 
     userRepository.save(user);
 
